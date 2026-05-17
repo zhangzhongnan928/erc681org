@@ -363,6 +363,11 @@ export const WALLET_SUPPORT: WalletSupportRow[] = [
   // and "erc-681"; checked developer deeplink docs; confirmed wallet deeplink schemes.
   // MetaMask Mobile confirmed at v7.68.0 (changelog: analytics refactoring only, no
   // ERC-681 changes). No wallets found to have added or removed ERC-681 support vs prior week.
+  //
+  // ── Week of 2026-05-18 research: 3 additional wallets ──
+  // MetaMask Mobile v7.77.0/v7.78.0 (May 15 2026): cherry-pick fixes for MetaMask Pay
+  // activity display, Ledger error handling, mUSD icon — no ERC-681 changes. Rating unchanged.
+  // New wallets added: TokenPocket, Coin98, Frame.
   {
     wallet: "Bitget Wallet",
     platforms: ["iOS", "Android", "Desktop (Chrome extension)"],
@@ -428,6 +433,70 @@ export const WALLET_SUPPORT: WalletSupportRow[] = [
       {
         label: "0xsequence/wallet-contracts GitHub repo (no ERC-681 references)",
         href: "https://github.com/0xsequence/wallet-contracts",
+      },
+    ],
+  },
+  {
+    wallet: "TokenPocket",
+    platforms: ["iOS", "Android"],
+    supportedChains: "Ethereum and 20+ blockchains (BSC, Tron, Solana, Polygon, EOS, etc.)",
+    schemeParsing: "partial",
+    nativeTransfer: "partial",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "partial",
+    nfcTap: "no",
+    notes:
+      "Receipt QR scanning recognises bare `ethereum:0x<address>` format (ERC-831/ERC-681 address-only). Full ERC-681 function params and chainId are not parsed. Token transfers and contract calls use a proprietary `tpoutside://pull.activity?param={...}` deeplink with JSON payload — not ERC-681 compatible. No `@chainId` handling in the ethereum: URI path.",
+    evidence: [
+      {
+        label: "TokenPocket QRCode Protocol docs (ethereum: bare address in receipt QR)",
+        href: "https://help.tokenpocket.pro/developer-en/scan-protocol",
+      },
+      {
+        label: "TokenPocket DeepLink docs (tpoutside:// proprietary JSON scheme, not ERC-681)",
+        href: "https://help.tokenpocket.pro/developer-en/wallet/pull-up-wallet-with-deeplink",
+      },
+    ],
+  },
+  {
+    wallet: "Coin98",
+    platforms: ["iOS", "Android", "Desktop (Chrome extension)"],
+    supportedChains: "Ethereum and major EVM chains, Solana, Terra, Cosmos, etc.",
+    schemeParsing: "no",
+    nativeTransfer: "no",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "no",
+    nfcTap: "no",
+    notes:
+      "Developer docs describe proprietary `https://coin98.com/dapp/:link/:chainId` URL scheme for dApp launching and `https://exchange.coin98.com/:chain/:from/:to` for swaps. No `ethereum:` URI handler documented. QR scanning is for WalletConnect pairing and address display only.",
+    evidence: [
+      {
+        label: "Coin98 deeplink docs (coin98.com/dapp scheme only, no ethereum:)",
+        href: "https://docs.coin98.com/developer-guide/deeplink",
+      },
+    ],
+  },
+  {
+    wallet: "Frame",
+    platforms: ["Desktop (macOS/Windows/Linux — native app + browser extension)"],
+    supportedChains: "Ethereum and all EVM-compatible chains",
+    schemeParsing: "no",
+    nativeTransfer: "no",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "no",
+    nfcTap: "no",
+    notes:
+      "Desktop-only Ethereum wallet acting as a system-level provider for dApps. Interaction model is entirely dApp → injected provider (EIP-1193); no URI deeplink or QR scanning for payment requests. No ERC-681 references found in the open-source codebase.",
+    evidence: [
+      {
+        label: "frame-eth/frame GitHub repo (no ERC-681 references)",
+        href: "https://github.com/frame-eth/frame",
       },
     ],
   },

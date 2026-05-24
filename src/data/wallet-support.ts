@@ -165,6 +165,85 @@ export const WALLET_SUPPORT: WalletSupportRow[] = [
       },
     ],
   },
+  // ── Week of 2026-05-25 research: 3 additional wallets ──
+  // MetaMask Mobile v7.78.0 (May 22 2026): translations, Explore page feature,
+  // token icon fixes, BTC swap fix — no ERC-681 changes. All prior ratings unchanged.
+  // New wallets added: Brave Wallet, Backpack, MyEtherWallet (MEW).
+  // Methodology: checked official docs, developer deeplink references, and public
+  // GitHub repos for 'ethereum:' URI and '681' references. No wallet found to have
+  // added or removed ERC-681 support vs prior week.
+  {
+    wallet: "Brave Wallet",
+    platforms: ["Desktop (built-in Brave browser, Windows/macOS/Linux)", "iOS", "Android"],
+    supportedChains: "Ethereum and all EVM-compatible chains, Solana, Bitcoin",
+    schemeParsing: "no",
+    nativeTransfer: "no",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "no",
+    nfcTap: "no",
+    notes:
+      "Built directly into the Brave browser; interaction model is dApp → injected provider (EIP-1193) or WalletConnect. No ethereum: URI deeplink handler documented in Brave Wallet docs. No ERC-681 references found in the brave-core open-source repo. QR used for receive address display and WalletConnect pairing only.",
+    evidence: [
+      {
+        label: "Brave Wallet developer docs (no ethereum: deeplink scheme)",
+        href: "https://brave.com/learn/what-is-brave-wallet/",
+      },
+      {
+        label: "brave/brave-core GitHub repo (no ERC-681 references found)",
+        href: "https://github.com/brave/brave-core",
+      },
+    ],
+  },
+  {
+    wallet: "Backpack",
+    platforms: ["iOS", "Android", "Desktop (Chrome/Brave extension)"],
+    supportedChains: "Solana, Ethereum, Base, Polygon, Arbitrum, Sui, Monad, Bitcoin",
+    schemeParsing: "no",
+    nativeTransfer: "no",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "no",
+    nfcTap: "no",
+    notes:
+      "Solana-first multi-chain wallet with integrated exchange. Ethereum support added later; interaction model is injected provider/WalletConnect. No ethereum: URI deeplink handler documented. Developer docs and blog posts show no ERC-681 references; QR is for address display and WalletConnect pairing only.",
+    evidence: [
+      {
+        label: "Backpack developer docs (no ethereum: URI scheme)",
+        href: "https://docs.backpack.app/",
+      },
+      {
+        label: "Backpack wallet review 2026 (Solana-first, multi-chain via injected provider)",
+        href: "https://cryptoadventure.com/backpack-review-2026-solana-wallet-ux-exchange-tie-ins-and-who-it-fits-best/",
+      },
+    ],
+  },
+  {
+    wallet: "MyEtherWallet (MEW)",
+    platforms: ["iOS", "Android", "Web app"],
+    supportedChains: "Ethereum and EVM-compatible chains",
+    schemeParsing: "no",
+    nativeTransfer: "no",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "no",
+    nfcTap: "no",
+    notes:
+      "One of the original Ethereum wallets. QR scanning is for receive addresses and MEWconnect/WalletConnect pairing only. Help center articles describe QR as address-display feature; no ethereum: URI payment request flow documented. MEW mobile open-source codebase has no ERC-681 parsing.",
+    evidence: [
+      {
+        label: "MEW help: Sending and Receiving on MEW Mobile iOS (QR for receive address only)",
+        href: "https://help.myetherwallet.com/en/articles/5946513-sending-and-receiving-crypto-on-mew-mobile-ios",
+      },
+      {
+        label: "MyEtherWallet/MyEtherWallet GitHub repo (no ERC-681 references)",
+        href: "https://github.com/MyEtherWallet/MyEtherWallet",
+      },
+    ],
+  },
   // ── Week of 2026-03-16 research: 10 additional wallets ──
   // Methodology: searched each wallet's GitHub repo/codebase for "681", "ethereum:",
   // and "erc-681"; checked developer docs and deeplink documentation; cross-referenced

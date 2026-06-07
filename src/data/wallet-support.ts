@@ -358,6 +358,73 @@ export const WALLET_SUPPORT: WalletSupportRow[] = [
       },
     ],
   },
+  // ── Week of 2026-06-08 research: 2 additional wallets ──
+  // MetaMask Mobile v7.80.0 (June 5, 2026): Perps deeplink fixes, Predict sports moneyline,
+  // MetaMetrics marketing-consent gate, engagement design updates — no ERC-681 changes. Rating unchanged.
+  // New wallets added: AlphaWallet, Status.
+  // Methodology: inspected open-source codebases (AlphaWallet/alpha-wallet-android,
+  // status-im/status-legacy) for EIP681 parsing and generation code. AlphaWallet has the
+  // most comprehensive ERC-681 implementation found to date among mobile wallets.
+  {
+    wallet: "AlphaWallet",
+    platforms: ["iOS", "Android"],
+    supportedChains: "Ethereum and all EVM-compatible chains (Polygon, BSC, Gnosis, Arbitrum, Optimism, etc.)",
+    schemeParsing: "yes",
+    nativeTransfer: "yes",
+    erc20Transfer: "yes",
+    arbitraryContractCall: "yes",
+    chainIdHandling: "yes",
+    qrScan: "yes",
+    nfcTap: "no",
+    notes:
+      "One of the most complete ERC-681 implementations found. Open-source Android codebase contains: EthereumProtocolParser (parses ethereum: URI including @chainId, function calls, and value), EIP681Type enum (ADDRESS, PAYMENT, TRANSFER, FUNCTION_CALL), and EIP681Request class that generates spec-compliant QR codes. The wallet's POS terminal mode (QR icon → POS icon) generates EIP681 payment request QR codes for native ETH and ERC-20 transfers. QR scanner routes ethereum: URIs to the correct transaction flow by type. Note: last GitHub release was v3.88 (April 2025); app is still live on stores but development pace has slowed. Built by the Smart Token Labs/TokenScript team.",
+    evidence: [
+      {
+        label: "AlphaWallet/alpha-wallet-android: EIP681Type.java (PAYMENT, TRANSFER, FUNCTION_CALL types)",
+        href: "https://github.com/AlphaWallet/alpha-wallet-android/blob/master/app/src/main/java/com/alphawallet/app/entity/EIP681Type.java",
+      },
+      {
+        label: "AlphaWallet/alpha-wallet-android: EthereumProtocolParser.java (full ethereum: URI parsing)",
+        href: "https://github.com/AlphaWallet/alpha-wallet-android/blob/master/app/src/main/java/com/alphawallet/app/entity/EthereumProtocolParser.java",
+      },
+      {
+        label: "AlphaWallet/alpha-wallet-android: EIP681Request.java (generateRequest + generateERC20Request)",
+        href: "https://github.com/AlphaWallet/alpha-wallet-android/blob/master/app/src/main/java/com/alphawallet/app/entity/EIP681Request.java",
+      },
+      {
+        label: "AlphaWallet/alpha-wallet-android issue #2082: EIP681 activity POS mode",
+        href: "https://github.com/AlphaWallet/alpha-wallet-android/issues/2082",
+      },
+    ],
+  },
+  {
+    wallet: "Status",
+    platforms: ["iOS", "Android"],
+    supportedChains: "Ethereum mainnet, Base, Arbitrum, Optimism (EVM chains)",
+    schemeParsing: "partial",
+    nativeTransfer: "partial",
+    erc20Transfer: "partial",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "partial",
+    nfcTap: "no",
+    notes:
+      "Privacy-first messenger + Ethereum wallet. The legacy codebase (status-legacy) explicitly documented partial ERC-681 QR support: 'EIP681 is supported only in QRCodes and the specification is partially supported' (issue #9183). ENS resolution for EIP681 URIs was added in PR #9240. A later issue (#9371, status-mobile) proposed full EIP681 support for message-embedded payment boxes but implementation status in the current app is unconfirmed. Rated partial/partial/partial/no/no/partial/no conservatively, reflecting the legacy codebase evidence and inability to confirm current app behaviour.",
+    evidence: [
+      {
+        label: "status-im/status-legacy#9183: EIP681 supported only in QR, spec partially supported",
+        href: "https://github.com/status-im/status-legacy/issues/9183",
+      },
+      {
+        label: "status-im/status-legacy PR#9240: ENS resolution for EIP681 URIs in QR scanner",
+        href: "https://github.com/status-im/status-legacy/pull/9240",
+      },
+      {
+        label: "status-im/status-mobile#9371: future EIP681 message payment box (unconfirmed)",
+        href: "https://github.com/status-im/status-mobile/issues/9371",
+      },
+    ],
+  },
   {
     wallet: "Ledger Live",
     platforms: ["iOS", "Android", "Desktop (Windows/macOS/Linux)"],

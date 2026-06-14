@@ -358,6 +358,12 @@ export const WALLET_SUPPORT: WalletSupportRow[] = [
       },
     ],
   },
+  // ── Week of 2026-06-15 research: 2 additional wallets ──
+  // MetaMask Mobile v8.52.0 (June 8, 2026): Major version bump to 8.x. Agent Wallet early access
+  // (AI-driven onchain trading), MetaMask Card spend features, MetaMask Pay cross-chain withdrawals
+  // for Polymarket. QR scanner fix (#30088) was a UI ordering fix, not ERC-681 parsing. No ERC-681 changes.
+  // New wallets added: ZenGo, SafePal.
+  //
   // ── Week of 2026-06-08 research: 2 additional wallets ──
   // MetaMask Mobile v7.80.0 (June 5, 2026): Perps deeplink fixes, Predict sports moneyline,
   // MetaMetrics marketing-consent gate, engagement design updates — no ERC-681 changes. Rating unchanged.
@@ -422,6 +428,46 @@ export const WALLET_SUPPORT: WalletSupportRow[] = [
       {
         label: "status-im/status-mobile#9371: future EIP681 message payment box (unconfirmed)",
         href: "https://github.com/status-im/status-mobile/issues/9371",
+      },
+    ],
+  },
+  {
+    wallet: "ZenGo",
+    platforms: ["iOS", "Android"],
+    supportedChains: "Ethereum, Bitcoin, Polygon, BNB Chain, and 120+ assets",
+    schemeParsing: "partial",
+    nativeTransfer: "partial",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "partial",
+    nfcTap: "no",
+    notes:
+      "Keyless MPC wallet. A documented 2021 incident confirmed ZenGo misparses ERC-681 ERC-20 transfer QRs: when Coinbase Wallet generated an ERC-681 URI for an ERC-20 send, ZenGo decoded the encoded calldata as a plain ETH transfer instead of a token transfer, risking fund loss. Native ETH payment QRs (bare ethereum:address?value=) may work, but ERC-20 and contract call params are not correctly parsed. No evidence of a fix in subsequent releases. Closed source — no repo verification possible. The incident is the primary evidence for this rating.",
+    evidence: [
+      {
+        label: "CoinDesk: Coinbase and ZenGo Spar Over QR Code Standards (ERC-681 mismatch documented)",
+        href: "https://www.coindesk.com/tech/2021/03/25/coinbase-zengo-spar-over-qr-code-standards-that-could-strand-erc-20-tokens",
+      },
+    ],
+  },
+  {
+    wallet: "SafePal",
+    platforms: ["iOS", "Android", "Hardware (S1/S1 Pro)"],
+    supportedChains: "Ethereum, Bitcoin, BNB Chain, Polygon, Solana, and 100+ blockchains",
+    schemeParsing: "no",
+    nativeTransfer: "no",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "no",
+    nfcTap: "no",
+    notes:
+      "Multi-chain software + hardware wallet. QR scanning on the hardware device is used for air-gapped signing (camera scans unsigned transaction QR from companion app), not for ERC-681 payment URIs. Software app QR is for receive addresses and WalletConnect pairing only. No documentation or third-party evidence of ethereum: URI parsing in either the app or hardware flows.",
+    evidence: [
+      {
+        label: "SafePal official site — QR feature describes air-gapped signing, not payment URI",
+        href: "https://www.safepal.com/en/",
       },
     ],
   },

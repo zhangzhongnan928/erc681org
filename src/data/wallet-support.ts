@@ -471,6 +471,44 @@ export const WALLET_SUPPORT: WalletSupportRow[] = [
       },
     ],
   },
+  // ── Week of 2026-06-22 research: 1 new wallet ──
+  // Trezor Suite May 2026 update (released ~May 21, 2026): ERC-681 links and QR codes
+  // explicitly added to the send form. Confirmed via Trezor Forum release post, Google Play Store
+  // listing, Apple App Store listing, and GitHub trezor/trezor-suite releases page. The GitHub
+  // release note reads: "ERC-681 QR codes are now supported in the send form, making it easier
+  // to scan token transfer requests." This confirms both native and ERC-20 token support.
+  // No evidence of arbitrary contract call or @chainId auto-switching via ERC-681 URI.
+  // Existing wallets checked: no ERC-681 changes found for MetaMask Mobile (v8.52.x), Rainbow,
+  // Trust Wallet, Coinbase Wallet, imToken, D'CENT, Phantom, OKX, Rabby, Safe, Zerion, Argent,
+  // Exodus, 1inch, Uniswap, AlphaWallet, Status, ZenGo, SafePal this week.
+  {
+    wallet: "Trezor Suite",
+    platforms: ["iOS", "Android", "Desktop (Windows/macOS/Linux)"],
+    supportedChains: "Ethereum and all EVM-compatible chains supported by Trezor hardware (Base, Arbitrum, Polygon, Optimism, BSC, etc.)",
+    schemeParsing: "yes",
+    nativeTransfer: "yes",
+    erc20Transfer: "yes",
+    arbitraryContractCall: "no",
+    chainIdHandling: "partial",
+    qrScan: "yes",
+    nfcTap: "no",
+    notes:
+      "Hardware wallet companion app. Added ERC-681 link and QR code support in the May 2026 update ('ERC-681 links and QR codes are now supported in the send form'). GitHub release note confirms 'token transfer requests', implying ERC-20 support. Multiple EVM chains are supported by Trezor hardware but whether the @chainId field in an ERC-681 URI auto-selects the correct network is unconfirmed — rated partial. NFC is used for Trezor Model T and Safe 3 device communication, not payment URI tapping.",
+    evidence: [
+      {
+        label: "Trezor Forum: Trezor Suite May 2026 update (ERC-681 links and QR codes in send form)",
+        href: "https://forum.trezor.io/t/trezor-suite-may-2026-update-is-here/26798",
+      },
+      {
+        label: "trezor/trezor-suite GitHub releases (ERC-681 QR codes for token transfer requests)",
+        href: "https://github.com/trezor/trezor-suite/releases",
+      },
+      {
+        label: "Trezor Suite on Google Play — release notes (ERC-681 QR codes now supported in Send)",
+        href: "https://play.google.com/store/apps/details?id=io.trezor.suite",
+      },
+    ],
+  },
   {
     wallet: "Ledger Live",
     platforms: ["iOS", "Android", "Desktop (Windows/macOS/Linux)"],

@@ -95,6 +95,37 @@ export default function InPersonPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Reference implementation: ER681‑Terminal</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-muted-foreground">
+          <p>
+            <a
+              href="https://github.com/zhangzhongnan928/ER681-Terminal"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              ER681‑Terminal
+            </a>{" "}
+            is an open-source ERC‑20 payment terminal (native Android and iOS apps plus reusable,
+            keyless read-only SDKs) built on exactly this flow: the cashier enters an amount, the
+            terminal presents a canonical ERC‑681 QR code, and payment is observed via read-only
+            JSON‑RPC.
+          </p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Unique one-time receiver per invoice, derived locally with CREATE2</li>
+            <li>ERC‑20 <span className="font-mono">transfer</span> QR payments only — no arbitrary contract calls</li>
+            <li>Settlement restricted to a single whitelisted vault method, signed by a device-local operator wallet</li>
+          </ul>
+          <p className="text-sm">
+            It’s a working demonstration that the “scan → confirm → done” model is buildable today
+            with a strict safety boundary.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>NFC: why it’s underused (but powerful)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-muted-foreground">

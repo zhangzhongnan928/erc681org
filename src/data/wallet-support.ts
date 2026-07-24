@@ -1,755 +1,825 @@
-export type SupportLevel = "no" | "partial" | "yes";
+export type CapabilityStatus =
+  | "confirmed"
+  | "limited"
+  | "not-supported"
+  | "not-documented";
+
+export type EvidenceGrade =
+  | "code-confirmed"
+  | "official-claim"
+  | "scoped"
+  | "no-public-evidence";
+
+export type WalletEvidence = {
+  label: string;
+  href: string;
+  kind: "official-code" | "official-docs" | "official-release" | "official-site";
+};
 
 export type WalletSupportRow = {
   wallet: string;
   platforms: string[];
-  supportedChains: string;
-  // Core scheme parsing (ethereum:) and amount/value handling
-  schemeParsing: SupportLevel;
-  nativeTransfer: SupportLevel;
-  erc20Transfer: SupportLevel;
-  arbitraryContractCall: SupportLevel;
-  chainIdHandling: SupportLevel;
-  qrScan: SupportLevel;
-  nfcTap: SupportLevel;
+  evidenceGrade: EvidenceGrade;
+  schemeParsing: CapabilityStatus;
+  nativeTransfer: CapabilityStatus;
+  erc20Transfer: CapabilityStatus;
+  otherContractCalls: CapabilityStatus;
+  chainIdHandling: CapabilityStatus;
+  qrScan: CapabilityStatus;
+  reviewedAt: string | null;
   notes: string;
-  evidence: { label: string; href: string }[];
+  evidence: WalletEvidence[];
 };
 
-// This dataset is intentionally conservative and evidence-linked.
-// Update via PRs when behavior changes (wallet releases regress frequently).
-//
-// qrScan levels:
-//   "yes"     = scans QR codes containing `ethereum:` URIs and parses them as ERC-681 transactions
-//   "partial" = scans QR codes but only for address-only or amount-only flows (no full ERC-681 parsing)
-//   "no"      = no QR scanning for `ethereum:` URIs; QR used only for WalletConnect pairing or address display
-export const WALLET_SUPPORT: WalletSupportRow[] = [
+const REVIEWED_AT = "2026-07-24";
+
+export const VERIFIED_WALLET_SUPPORT: WalletSupportRow[] = [
   {
     wallet: "MetaMask Mobile",
     platforms: ["iOS", "Android"],
-    supportedChains:
-      "Ethereum mainnet + user-added EVM networks (Base, OP, Arbitrum, Polygon, BSC, etc.)",
-    schemeParsing: "partial",
-    nativeTransfer: "yes",
-    erc20Transfer: "partial",
-    arbitraryContractCall: "no",
-    chainIdHandling: "partial",
-    qrScan: "yes",
-    nfcTap: "no",
+    evidenceGrade: "code-confirmed",
+    schemeParsing: "confirmed",
+    nativeTransfer: "confirmed",
+    erc20Transfer: "confirmed",
+    otherContractCalls: "limited",
+    chainIdHandling: "confirmed",
+    qrScan: "confirmed",
+    reviewedAt: REVIEWED_AT,
     notes:
-      "Works for basic native transfers. Contract calls via ERC-681 are widely reported as unreliable due to missing ABI context; community pushes alternatives (deep links/WalletConnect).",
+      "Current source routes ethereum: links through eth-url-parser, switches to the requested chain, and builds native, ERC-20 transfer, and approve flows. This is not general ABI-driven contract-call support.",
     evidence: [
       {
-        label: "EIP-681 (spec)",
-        href: "https://eips.ethereum.org/EIPS/eip-681",
+        label: "Ethereum URI handler",
+        href: "https://github.com/MetaMask/metamask-mobile/blob/8a480513f106dfc735f7a85d6d6d7fde47e508e8/app/core/DeeplinkManager/handlers/legacy/handleEthereumUrl.ts",
+        kind: "official-code",
       },
       {
-        label: "MetaMask issue: wrong value on ERC-20 (mobile)",
-        href: "https://github.com/MetaMask/metamask-mobile/issues/1549",
+        label: "Native + ERC-20 generators",
+        href: "https://github.com/MetaMask/metamask-mobile/blob/8a480513f106dfc735f7a85d6d6d7fde47e508e8/app/util/payment-link-generator.js",
+        kind: "official-code",
       },
       {
-        label: "Magicians thread (adoption + pain points)",
-        href: "https://ethereum-magicians.org/t/erc-681-representing-various-transactions-as-urls/650",
+        label: "Mobile deeplink guide",
+        href: "https://github.com/MetaMask/metamask-mobile/blob/8a480513f106dfc735f7a85d6d6d7fde47e508e8/docs/readme/deeplinking.md",
+        kind: "official-docs",
       },
     ],
   },
   {
     wallet: "Rainbow",
     platforms: ["iOS", "Android"],
-    supportedChains: "Ethereum + multiple L2s/sidechains",
-    schemeParsing: "partial",
-    nativeTransfer: "yes",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "partial",
-    qrScan: "yes",
-    nfcTap: "no",
+    evidenceGrade: "code-confirmed",
+    schemeParsing: "confirmed",
+    nativeTransfer: "confirmed",
+    erc20Transfer: "confirmed",
+    otherContractCalls: "not-supported",
+    chainIdHandling: "confirmed",
+    qrScan: "confirmed",
+    reviewedAt: REVIEWED_AT,
     notes:
-      "Generally supports address/amount QR flows for native transfers; complex contract calls are not handled via ERC-681; WalletConnect preferred for dApp interactions.",
+      "The QR scanner and deep-link handler both route ethereum: URIs into a send flow. Current code supports native transfers and ERC-20 transfer, uses chain_id, and rejects other function names.",
     evidence: [
       {
-        label: "Magicians thread (discussion)",
-        href: "https://ethereum-magicians.org/t/erc-681-representing-various-transactions-as-urls/650",
+        label: "QR scanner",
+        href: "https://github.com/rainbow-me/rainbow/blob/354bd7cda8954b3e90e2815851778529f543751e/src/hooks/useScanner.ts",
+        kind: "official-code",
+      },
+      {
+        label: "Transfer URI handler",
+        href: "https://github.com/rainbow-me/rainbow/blob/354bd7cda8954b3e90e2815851778529f543751e/src/features/transfer/utils/startSendFromEthereumUrl.ts",
+        kind: "official-code",
       },
     ],
   },
   {
-    wallet: "Trust Wallet",
+    wallet: "AlphaWallet",
     platforms: ["iOS", "Android"],
-    supportedChains: "Multi-chain (Ethereum, BSC, Polygon, Avalanche, etc.)",
-    schemeParsing: "partial",
-    nativeTransfer: "partial",
-    erc20Transfer: "partial",
-    arbitraryContractCall: "no",
-    chainIdHandling: "partial",
-    qrScan: "yes",
-    nfcTap: "no",
+    evidenceGrade: "code-confirmed",
+    schemeParsing: "confirmed",
+    nativeTransfer: "confirmed",
+    erc20Transfer: "limited",
+    otherContractCalls: "not-supported",
+    chainIdHandling: "confirmed",
+    qrScan: "confirmed",
+    reviewedAt: REVIEWED_AT,
     notes:
-      "Historically inconsistent parsing of Ethereum `value=` and `@chainId` across networks; some flows required wallet-specific wrappers/parameters.",
+      "iOS tests cover native and ERC-20 transfers, scientific notation, ENS, and @chainId. Android tests confirm native payment QR parsing; equivalent Android ERC-20 behavior was not proven in the reviewed tests.",
     evidence: [
       {
-        label: "StackOverflow: iOS TrustWallet deep link provider injection note",
-        href: "https://stackoverflow.com/questions/77149302/trustwallet-not-injecting-ethereum-provider-with-deeplinking-into-mobile-ios-tru",
+        label: "iOS parser tests",
+        href: "https://github.com/AlphaWallet/alpha-wallet-ios/blob/e4e5cc89edc459b3d266cd7124ab09b7f096b80d/AlphaWalletTests/Foundation/QRCodeValueParserTests.swift",
+        kind: "official-code",
       },
       {
-        label: "Magicians thread (discussion)",
-        href: "https://ethereum-magicians.org/t/erc-681-representing-various-transactions-as-urls/650",
+        label: "iOS resolver",
+        href: "https://github.com/AlphaWallet/alpha-wallet-ios/blob/e4e5cc89edc459b3d266cd7124ab09b7f096b80d/modules/AlphaWalletFoundation/AlphaWalletFoundation/Tokens/Eip681UrlResolver.swift",
+        kind: "official-code",
+      },
+      {
+        label: "Android parser test",
+        href: "https://github.com/AlphaWallet/alpha-wallet-android/blob/f7b84e0cec282f0a1a7f0cd30f60d5c5fee26d40/app/src/test/java/com/alphawallet/app/util/QRParserTest.java",
+        kind: "official-code",
       },
     ],
   },
   {
-    wallet: "Coinbase Wallet",
+    wallet: "Trezor Suite Mobile",
+    platforms: ["Android"],
+    evidenceGrade: "code-confirmed",
+    schemeParsing: "confirmed",
+    nativeTransfer: "limited",
+    erc20Transfer: "confirmed",
+    otherContractCalls: "not-supported",
+    chainIdHandling: "confirmed",
+    qrScan: "confirmed",
+    reviewedAt: REVIEWED_AT,
+    notes:
+      "Mobile release 26.5.1 added ERC-681 QR scanning. The parser accepts address-only native requests and ERC-20 transfer with integer amounts and known @chainId values; it rejects native ?value= requests and non-transfer calls.",
+    evidence: [
+      {
+        label: "Mobile 26.5.1 release",
+        href: "https://github.com/trezor/trezor-suite/releases/tag/v26.5.1%40mobile",
+        kind: "official-release",
+      },
+      {
+        label: "Transfer URI parser",
+        href: "https://github.com/trezor/trezor-suite/blob/ab48a1e3c874658173df4ae5ed05c6b485f7df4a/suite-common/transfer-uri/src/parseErc681TransferUri.ts",
+        kind: "official-code",
+      },
+      {
+        label: "Parser fixtures",
+        href: "https://github.com/trezor/trezor-suite/blob/ab48a1e3c874658173df4ae5ed05c6b485f7df4a/suite-common/transfer-uri/src/__fixtures__/parseErc681TransferUri.ts",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "D'CENT Wallet",
     platforms: ["iOS", "Android"],
-    supportedChains: "Ethereum mainnet + user-added EVM networks",
-    schemeParsing: "partial",
-    nativeTransfer: "yes",
-    erc20Transfer: "partial",
-    arbitraryContractCall: "no",
-    chainIdHandling: "partial",
-    qrScan: "yes",
-    nfcTap: "no",
+    evidenceGrade: "official-claim",
+    schemeParsing: "confirmed",
+    nativeTransfer: "confirmed",
+    erc20Transfer: "confirmed",
+    otherContractCalls: "not-documented",
+    chainIdHandling: "limited",
+    qrScan: "confirmed",
+    reviewedAt: REVIEWED_AT,
     notes:
-      "Can generate/scan EIP-681-style token transfer QR codes in some flows, but still limited for arbitrary contract calls; ecosystem often favors WalletConnect/SDK flows.",
+      "D'CENT's official announcement says its mobile app populates payment amount and beneficiary from EIP-681 QR codes for native assets and ERC-20 tokens across multiple EVM networks. Exact @chainId and arbitrary-call behavior are not documented.",
     evidence: [
       {
-        label: "Coinbase: three ways to integrate Coinbase Wallet",
-        href: "https://www.coinbase.com/developer-platform/discover/dev-foundations/three-ways-to-integrate-coinbase-wallet",
-      },
-      {
-        label: "Magicians thread (discussion)",
-        href: "https://ethereum-magicians.org/t/erc-681-representing-various-transactions-as-urls/650",
+        label: "Official EIP-681 announcement",
+        href: "https://store.dcentwallet.com/blogs/post/d-cent-wallet-integrates-transaction-request-protocol-eip681",
+        kind: "official-release",
       },
     ],
   },
   {
-    wallet: "imToken",
+    wallet: "Tether Wallet",
     platforms: ["iOS", "Android"],
-    supportedChains: "EVM chains (Ethereum, BSC, Polygon, Arbitrum, etc.)",
-    schemeParsing: "yes",
-    nativeTransfer: "yes",
-    erc20Transfer: "yes",
-    arbitraryContractCall: "no",
-    chainIdHandling: "yes",
-    qrScan: "yes",
-    nfcTap: "partial",
+    evidenceGrade: "official-claim",
+    schemeParsing: "confirmed",
+    nativeTransfer: "limited",
+    erc20Transfer: "limited",
+    otherContractCalls: "not-documented",
+    chainIdHandling: "not-documented",
+    qrScan: "limited",
+    reviewedAt: REVIEWED_AT,
     notes:
-      "One of the stronger implementers for transfers; supports `ethereum:pay-` and token-transfer style flows. Still not a general ABI-based contract-call solution.",
+      "Version 1.6.0/1.6.1 release notes claim EIP-681 send and receive support, specifically naming XAUt and USA₮. Public release notes do not define the accepted URI grammar or chain-selection behavior.",
     evidence: [
       {
-        label: "Magicians thread (discussion)",
-        href: "https://ethereum-magicians.org/t/erc-681-representing-various-transactions-as-urls/650",
+        label: "iOS version history",
+        href: "https://apps.apple.com/us/app/tether-wallet/id6759002210",
+        kind: "official-release",
+      },
+      {
+        label: "Official launch",
+        href: "https://tether.io/news/tether-launches-tether-wallet-the-peoples-wallet-extending-its-global-financial-infrastructure-directly-to-billions-of-users-left-behind-by-the-traditional-financial-system/",
+        kind: "official-release",
       },
     ],
   },
   {
-    wallet: "D'CENT",
+    wallet: "Splendor Wallet",
     platforms: ["iOS", "Android"],
-    supportedChains: "EVM networks (Ethereum, Polygon, BSC, Avalanche C, etc.)",
-    schemeParsing: "yes",
-    nativeTransfer: "yes",
-    erc20Transfer: "yes",
-    arbitraryContractCall: "partial",
-    chainIdHandling: "yes",
-    qrScan: "yes",
-    nfcTap: "partial",
+    evidenceGrade: "official-claim",
+    schemeParsing: "confirmed",
+    nativeTransfer: "limited",
+    erc20Transfer: "limited",
+    otherContractCalls: "limited",
+    chainIdHandling: "not-documented",
+    qrScan: "confirmed",
+    reviewedAt: REVIEWED_AT,
     notes:
-      "Explicit EIP-681 support and good UX for payment requests; supports common token operations like transfer/approve in URI form.",
+      "The provider's iOS listing claims universal QR and EIP-681 with full URI parameter support. No public source or conformance tests were located, so individual transaction shapes remain provider-claimed rather than code-verified.",
     evidence: [
       {
-        label: "D'CENT EIP-681 guide",
-        href: "https://dev-docs.dcentwallet.com/dynamic-link/eip-681-transaction-payment-request",
+        label: "Official iOS listing",
+        href: "https://apps.apple.com/us/app/splendor-wallet/id6766822129",
+        kind: "official-release",
       },
       {
-        label: "EIP-681 spec",
-        href: "https://eips.ethereum.org/EIPS/eip-681",
-      },
-    ],
-  },
-  // ── Week of 2026-05-25 research: 3 additional wallets ──
-  // MetaMask Mobile v7.78.0 (May 22 2026): translations, Explore page feature,
-  // token icon fixes, BTC swap fix — no ERC-681 changes. All prior ratings unchanged.
-  // New wallets added: Brave Wallet, Backpack, MyEtherWallet (MEW).
-  // Methodology: checked official docs, developer deeplink references, and public
-  // GitHub repos for 'ethereum:' URI and '681' references. No wallet found to have
-  // added or removed ERC-681 support vs prior week.
-  {
-    wallet: "Brave Wallet",
-    platforms: ["Desktop (built-in Brave browser, Windows/macOS/Linux)", "iOS", "Android"],
-    supportedChains: "Ethereum and all EVM-compatible chains, Solana, Bitcoin",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Built directly into the Brave browser; interaction model is dApp → injected provider (EIP-1193) or WalletConnect. No ethereum: URI deeplink handler documented in Brave Wallet docs. No ERC-681 references found in the brave-core open-source repo. QR used for receive address display and WalletConnect pairing only.",
-    evidence: [
-      {
-        label: "Brave Wallet developer docs (no ethereum: deeplink scheme)",
-        href: "https://brave.com/learn/what-is-brave-wallet/",
-      },
-      {
-        label: "brave/brave-core GitHub repo (no ERC-681 references found)",
-        href: "https://github.com/brave/brave-core",
-      },
-    ],
-  },
-  {
-    wallet: "Backpack",
-    platforms: ["iOS", "Android", "Desktop (Chrome/Brave extension)"],
-    supportedChains: "Solana, Ethereum, Base, Polygon, Arbitrum, Sui, Monad, Bitcoin",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Solana-first multi-chain wallet with integrated exchange. Ethereum support added later; interaction model is injected provider/WalletConnect. No ethereum: URI deeplink handler documented. Developer docs and blog posts show no ERC-681 references; QR is for address display and WalletConnect pairing only.",
-    evidence: [
-      {
-        label: "Backpack developer docs (no ethereum: URI scheme)",
-        href: "https://docs.backpack.app/",
-      },
-      {
-        label: "Backpack wallet review 2026 (Solana-first, multi-chain via injected provider)",
-        href: "https://cryptoadventure.com/backpack-review-2026-solana-wallet-ux-exchange-tie-ins-and-who-it-fits-best/",
-      },
-    ],
-  },
-  {
-    wallet: "MyEtherWallet (MEW)",
-    platforms: ["iOS", "Android", "Web app"],
-    supportedChains: "Ethereum and EVM-compatible chains",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "One of the original Ethereum wallets. QR scanning is for receive addresses and MEWconnect/WalletConnect pairing only. Help center articles describe QR as address-display feature; no ethereum: URI payment request flow documented. MEW mobile open-source codebase has no ERC-681 parsing.",
-    evidence: [
-      {
-        label: "MEW help: Sending and Receiving on MEW Mobile iOS (QR for receive address only)",
-        href: "https://help.myetherwallet.com/en/articles/5946513-sending-and-receiving-crypto-on-mew-mobile-ios",
-      },
-      {
-        label: "MyEtherWallet/MyEtherWallet GitHub repo (no ERC-681 references)",
-        href: "https://github.com/MyEtherWallet/MyEtherWallet",
-      },
-    ],
-  },
-  // ── Week of 2026-03-16 research: 10 additional wallets ──
-  // Methodology: searched each wallet's GitHub repo/codebase for "681", "ethereum:",
-  // and "erc-681"; checked developer docs and deeplink documentation; cross-referenced
-  // with r/ethdev community reports. Absence of evidence is documented via repo search
-  // links where source code is publicly available.
-  {
-    wallet: "Phantom",
-    platforms: ["iOS", "Android", "Desktop (Chrome/Firefox/Brave extension)"],
-    supportedChains: "Ethereum, Solana, Polygon, Base, Bitcoin",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "QR scanning is for address display/receive only, not ethereum: URI parsing. Primarily Solana-focused; Ethereum support added later. Deeplink docs show solana: and phantom: schemes only, no ethereum: handler.",
-    evidence: [
-      {
-        label: "Phantom deeplinks documentation (no ethereum: scheme listed)",
-        href: "https://docs.phantom.com/phantom-deeplinks/other-methods",
-      },
-      {
-        label: "Reddit r/ethdev – Wallets with full EIP-681 support (none confirmed)",
-        href: "https://www.reddit.com/r/ethdev/comments/1nrq8ly/wallets_with_full_eip681_support/",
-      },
-    ],
-  },
-  {
-    wallet: "OKX Wallet",
-    platforms: ["iOS", "Android", "Desktop (Chrome extension)"],
-    supportedChains: "Ethereum and 100+ EVM chains, Solana, Bitcoin, Cosmos, etc.",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "QR scanning for WalletConnect pairing and address sharing only. Developer docs describe okx:// deeplink scheme and WalletConnect integration; no ethereum: URI handler documented.",
-    evidence: [
-      {
-        label: "OKX Wallet developer docs – deeplink/connect (no ethereum: scheme)",
-        href: "https://www.okx.com/web3/build/docs/sdks/app-connect-overview",
-      },
-    ],
-  },
-  {
-    wallet: "Rabby",
-    platforms: ["Desktop (Chrome/Brave extension)", "iOS", "Android"],
-    supportedChains: "Ethereum and all EVM-compatible chains (100+)",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Extension-first wallet focused on EVM security features. GitHub repo search for '681' and 'ethereum:' shows no ERC-681 implementation.",
-    evidence: [
-      {
-        label: "Rabby GitHub repo search for '681' (no results)",
-        href: "https://github.com/RabbyHub/Rabby/search?q=681",
-      },
-    ],
-  },
-  {
-    wallet: "Safe (Gnosis Safe)",
-    platforms: ["iOS", "Android", "Web app"],
-    supportedChains: "Ethereum and major EVM chains (Polygon, Arbitrum, Optimism, Base, etc.)",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Open GitHub issue (safe-global/safe-android#506) explicitly requests ERC-681 deeplink support but was never implemented. Uses WalletConnect and its own safe: URI scheme for multisig tx sharing. QR scanning is for WalletConnect pairing only.",
-    evidence: [
-      {
-        label: "safe-global/safe-android#506 – EIP-681 deeplink request (open, unimplemented)",
-        href: "https://github.com/safe-global/safe-android/issues/506",
-      },
-    ],
-  },
-  {
-    wallet: "Zerion",
-    platforms: ["iOS", "Android", "Desktop (Chrome extension)"],
-    supportedChains: "Ethereum and 10+ EVM chains, Solana",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "QR used for WalletConnect pairing only. Open-source wallet-core-ios repo has no references to ERC-681 or ethereum: URI parsing.",
-    evidence: [
-      {
-        label: "Zerion wallet-core-ios repo search for '681' (no results)",
-        href: "https://github.com/zeriontech/wallet-core-ios/search?q=681",
-      },
-    ],
-  },
-  {
-    wallet: "Argent",
-    platforms: ["iOS", "Android"],
-    supportedChains: "Ethereum, Starknet",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Smart contract wallet (Account Abstraction). QR for WalletConnect only. Guardian-based security model uses argent:// deeplink scheme; no ethereum: URI handler. Open-source repo has no ERC-681 references.",
-    evidence: [
-      {
-        label: "Argent GitHub repo search for '681' (no results)",
-        href: "https://github.com/argentlabs/argent-x/search?q=681",
-      },
-    ],
-  },
-  {
-    wallet: "Exodus",
-    platforms: ["iOS", "Android", "Desktop (Windows/macOS/Linux)"],
-    supportedChains: "Ethereum, Bitcoin, Solana, and 300+ assets",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Retail-focused non-custodial wallet. QR for receive addresses only. Deeplink docs show exodus:// scheme for send flows; no ethereum: URI handling documented. Closed source — no repo search available.",
-    evidence: [
-      {
-        label: "Exodus deeplink support article (exodus:// scheme only)",
-        href: "https://support.exodus.com/article/2226-using-links-to-send-crypto-with-exodus",
-      },
-    ],
-  },
-  {
-    wallet: "1inch Wallet",
-    platforms: ["iOS", "Android"],
-    supportedChains: "Ethereum and major EVM chains",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "No documentation or open-source code referencing ERC-681 ethereum: URI support. QR used for WalletConnect pairing only. Developer docs describe 1inch:// deeplink scheme.",
-    evidence: [
-      {
-        label: "1inch developer portal – no ERC-681 references in deeplink docs",
-        href: "https://portal.1inch.dev/documentation/wallet",
-      },
-    ],
-  },
-  {
-    wallet: "Uniswap Wallet",
-    platforms: ["iOS", "Android", "Desktop (Chrome extension)"],
-    supportedChains: "Ethereum, Polygon, Arbitrum, Optimism, Base, BNB Chain",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Swap-centric wallet. QR for WalletConnect pairing only. Open-source repo uses uniswap:// deeplink scheme; no ethereum: URI handler found.",
-    evidence: [
-      {
-        label: "Uniswap wallet repo search for '681' (no results)",
-        href: "https://github.com/Uniswap/wallet/search?q=681",
-      },
-      {
-        label: "Reddit r/ethdev – Wallets with full EIP-681 support (none confirmed)",
-        href: "https://www.reddit.com/r/ethdev/comments/1nrq8ly/wallets_with_full_eip681_support/",
-      },
-    ],
-  },
-  // ── Week of 2026-03-23 research: 3 additional wallets ──
-  // Methodology: searched each wallet's GitHub repo/codebase for "681", "ethereum:",
-  // and "erc-681"; checked developer deeplink docs; confirmed wallet deeplink schemes.
-  // MetaMask Mobile confirmed at v7.68.0 (changelog: analytics refactoring only, no
-  // ERC-681 changes). No wallets found to have added or removed ERC-681 support vs prior week.
-  //
-  // ── Week of 2026-05-18 research: 3 additional wallets ──
-  // MetaMask Mobile v7.77.0/v7.78.0 (May 15 2026): cherry-pick fixes for MetaMask Pay
-  // activity display, Ledger error handling, mUSD icon — no ERC-681 changes. Rating unchanged.
-  // New wallets added: TokenPocket, Coin98, Frame.
-  {
-    wallet: "Bitget Wallet",
-    platforms: ["iOS", "Android", "Desktop (Chrome extension)"],
-    supportedChains: "Ethereum and 100+ EVM chains, Bitcoin, Solana, TON, etc.",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Formerly BitKeep. Developer docs confirm proprietary `bitkeep://` deeplink scheme and WalletConnect for dApp connections. PayFi checkout flow uses `bitkeep://` protocol via their SDK. No ethereum: URI handler documented or found in public repos.",
-    evidence: [
-      {
-        label: "Bitget Wallet deeplink docs (bitkeep:// scheme only, no ethereum:)",
-        href: "https://web3.bitget.com/en/docs/reference/deeplink/",
-      },
-      {
-        label: "Bitget Wallet PayFi developer guide (bitkeep:// checkout)",
-        href: "https://web3.bitget.com/en/docs/payfi/developer-guide/",
-      },
-    ],
-  },
-  {
-    wallet: "Ambire Wallet",
-    platforms: ["iOS", "Android", "Desktop (Chrome extension)"],
-    supportedChains: "Ethereum and all EVM-compatible chains",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Smart contract wallet (ERC-4337, EIP-7702). Open-source repo shows no ERC-681 or ethereum: URI handler. Focus is on AA features (transaction batching, Gas Tank), WalletConnect, and EIP-7702 delegation. QR used for WalletConnect pairing only.",
-    evidence: [
-      {
-        label: "AmbireTech/wallet GitHub repo (no ERC-681 references)",
-        href: "https://github.com/AmbireTech/wallet",
-      },
-      {
-        label: "Ambire EIP-7702 blog post (feature focus; no ERC-681 mentioned)",
-        href: "https://blog.ambire.com/eip-7702-wallet/",
-      },
-    ],
-  },
-  {
-    wallet: "Sequence",
-    platforms: ["iOS", "Android", "Web app (embedded wallet)"],
-    supportedChains: "Ethereum and major EVM chains (Polygon, Arbitrum, Optimism, Base, etc.)",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Smart contract wallet primarily used as an embedded SDK wallet for games/dApps (e.g. Skyweaver). No ERC-681 references in open-source wallet-contracts repo. Integration is SDK-based (sequence.js), not deeplink/QR URI based.",
-    evidence: [
-      {
-        label: "0xsequence/wallet-contracts GitHub repo (no ERC-681 references)",
-        href: "https://github.com/0xsequence/wallet-contracts",
+        label: "Official wallet page",
+        href: "https://splendor.org/wallet",
+        kind: "official-site",
       },
     ],
   },
   {
     wallet: "TokenPocket",
     platforms: ["iOS", "Android"],
-    supportedChains: "Ethereum and 20+ blockchains (BSC, Tron, Solana, Polygon, EOS, etc.)",
-    schemeParsing: "partial",
-    nativeTransfer: "partial",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "partial",
-    nfcTap: "no",
+    evidenceGrade: "scoped",
+    schemeParsing: "limited",
+    nativeTransfer: "not-documented",
+    erc20Transfer: "not-documented",
+    otherContractCalls: "limited",
+    chainIdHandling: "limited",
+    qrScan: "confirmed",
+    reviewedAt: REVIEWED_AT,
     notes:
-      "Receipt QR scanning recognises bare `ethereum:0x<address>` format (ERC-831/ERC-681 address-only). Full ERC-681 function params and chainId are not parsed. Token transfers and contract calls use a proprietary `tpoutside://pull.activity?param={...}` deeplink with JSON payload — not ERC-681 compatible. No `@chainId` handling in the ethereum: URI path.",
+      "Official docs reference EIP-681 but define a TokenPocket-specific ethereum:signTransaction protocol for cold-wallet signing. That is not evidence that canonical ERC-681 payment requests are accepted.",
     evidence: [
       {
-        label: "TokenPocket QRCode Protocol docs (ethereum: bare address in receipt QR)",
-        href: "https://help.tokenpocket.pro/developer-en/scan-protocol",
-      },
-      {
-        label: "TokenPocket DeepLink docs (tpoutside:// proprietary JSON scheme, not ERC-681)",
-        href: "https://help.tokenpocket.pro/developer-en/wallet/pull-up-wallet-with-deeplink",
+        label: "Official EVM QR protocol",
+        href: "https://help.tokenpocket.pro/developer-en/scan-protocol/evm",
+        kind: "official-docs",
       },
     ],
   },
   {
-    wallet: "Coin98",
-    platforms: ["iOS", "Android", "Desktop (Chrome extension)"],
-    supportedChains: "Ethereum and major EVM chains, Solana, Terra, Cosmos, etc.",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Developer docs describe proprietary `https://coin98.com/dapp/:link/:chainId` URL scheme for dApp launching and `https://exchange.coin98.com/:chain/:from/:to` for swaps. No `ethereum:` URI handler documented. QR scanning is for WalletConnect pairing and address display only.",
-    evidence: [
-      {
-        label: "Coin98 deeplink docs (coin98.com/dapp scheme only, no ethereum:)",
-        href: "https://docs.coin98.com/developer-guide/deeplink",
-      },
-    ],
-  },
-  {
-    wallet: "Frame",
-    platforms: ["Desktop (macOS/Windows/Linux — native app + browser extension)"],
-    supportedChains: "Ethereum and all EVM-compatible chains",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Desktop-only Ethereum wallet acting as a system-level provider for dApps. Interaction model is entirely dApp → injected provider (EIP-1193); no URI deeplink or QR scanning for payment requests. No ERC-681 references found in the open-source codebase.",
-    evidence: [
-      {
-        label: "frame-eth/frame GitHub repo (no ERC-681 references)",
-        href: "https://github.com/frame-eth/frame",
-      },
-    ],
-  },
-  // ── Week of 2026-06-15 research: 2 additional wallets ──
-  // MetaMask Mobile v8.52.0 (June 8, 2026): Major version bump to 8.x. Agent Wallet early access
-  // (AI-driven onchain trading), MetaMask Card spend features, MetaMask Pay cross-chain withdrawals
-  // for Polymarket. QR scanner fix (#30088) was a UI ordering fix, not ERC-681 parsing. No ERC-681 changes.
-  // New wallets added: ZenGo, SafePal.
-  //
-  // ── Week of 2026-06-08 research: 2 additional wallets ──
-  // MetaMask Mobile v7.80.0 (June 5, 2026): Perps deeplink fixes, Predict sports moneyline,
-  // MetaMetrics marketing-consent gate, engagement design updates — no ERC-681 changes. Rating unchanged.
-  // New wallets added: AlphaWallet, Status.
-  // Methodology: inspected open-source codebases (AlphaWallet/alpha-wallet-android,
-  // status-im/status-legacy) for EIP681 parsing and generation code. AlphaWallet has the
-  // most comprehensive ERC-681 implementation found to date among mobile wallets.
-  {
-    wallet: "AlphaWallet",
+    wallet: "Uniswap Wallet",
     platforms: ["iOS", "Android"],
-    supportedChains: "Ethereum and all EVM-compatible chains (Polygon, BSC, Gnosis, Arbitrum, Optimism, etc.)",
-    schemeParsing: "yes",
-    nativeTransfer: "yes",
-    erc20Transfer: "yes",
-    arbitraryContractCall: "yes",
-    chainIdHandling: "yes",
-    qrScan: "yes",
-    nfcTap: "no",
+    evidenceGrade: "scoped",
+    schemeParsing: "limited",
+    nativeTransfer: "limited",
+    erc20Transfer: "not-supported",
+    otherContractCalls: "not-supported",
+    chainIdHandling: "not-supported",
+    qrScan: "confirmed",
+    reviewedAt: REVIEWED_AT,
     notes:
-      "One of the most complete ERC-681 implementations found. Open-source Android codebase contains: EthereumProtocolParser (parses ethereum: URI including @chainId, function calls, and value), EIP681Type enum (ADDRESS, PAYMENT, TRANSFER, FUNCTION_CALL), and EIP681Request class that generates spec-compliant QR codes. The wallet's POS terminal mode (QR icon → POS icon) generates EIP681 payment request QR codes for native ETH and ERC-20 transfers. QR scanner routes ethereum: URIs to the correct transaction flow by type. Note: last GitHub release was v3.88 (April 2025); app is still live on stores but development pace has slowed. Built by the Smart Token Labs/TokenScript team.",
+      "Current scanner code accepts ethereum:<address> as an address QR. It does not parse the ERC-681 path, query parameters, or @chainId suffix, so this is address import rather than payment-request support.",
     evidence: [
       {
-        label: "AlphaWallet/alpha-wallet-android: EIP681Type.java (PAYMENT, TRANSFER, FUNCTION_CALL types)",
-        href: "https://github.com/AlphaWallet/alpha-wallet-android/blob/master/app/src/main/java/com/alphawallet/app/entity/EIP681Type.java",
+        label: "Scanner URI classifier",
+        href: "https://github.com/Uniswap/interface/blob/a69a38c2fab83be09b7d4113094a49b385810c5e/apps/mobile/src/components/Requests/ScanSheet/util.ts",
+        kind: "official-code",
       },
       {
-        label: "AlphaWallet/alpha-wallet-android: EthereumProtocolParser.java (full ethereum: URI parsing)",
-        href: "https://github.com/AlphaWallet/alpha-wallet-android/blob/master/app/src/main/java/com/alphawallet/app/entity/EthereumProtocolParser.java",
-      },
-      {
-        label: "AlphaWallet/alpha-wallet-android: EIP681Request.java (generateRequest + generateERC20Request)",
-        href: "https://github.com/AlphaWallet/alpha-wallet-android/blob/master/app/src/main/java/com/alphawallet/app/entity/EIP681Request.java",
-      },
-      {
-        label: "AlphaWallet/alpha-wallet-android issue #2082: EIP681 activity POS mode",
-        href: "https://github.com/AlphaWallet/alpha-wallet-android/issues/2082",
-      },
-    ],
-  },
-  {
-    wallet: "Status",
-    platforms: ["iOS", "Android"],
-    supportedChains: "Ethereum mainnet, Base, Arbitrum, Optimism (EVM chains)",
-    schemeParsing: "partial",
-    nativeTransfer: "partial",
-    erc20Transfer: "partial",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "partial",
-    nfcTap: "no",
-    notes:
-      "Privacy-first messenger + Ethereum wallet. The legacy codebase (status-legacy) explicitly documented partial ERC-681 QR support: 'EIP681 is supported only in QRCodes and the specification is partially supported' (issue #9183). ENS resolution for EIP681 URIs was added in PR #9240. A later issue (#9371, status-mobile) proposed full EIP681 support for message-embedded payment boxes but implementation status in the current app is unconfirmed. Rated partial/partial/partial/no/no/partial/no conservatively, reflecting the legacy codebase evidence and inability to confirm current app behaviour.",
-    evidence: [
-      {
-        label: "status-im/status-legacy#9183: EIP681 supported only in QR, spec partially supported",
-        href: "https://github.com/status-im/status-legacy/issues/9183",
-      },
-      {
-        label: "status-im/status-legacy PR#9240: ENS resolution for EIP681 URIs in QR scanner",
-        href: "https://github.com/status-im/status-legacy/pull/9240",
-      },
-      {
-        label: "status-im/status-mobile#9371: future EIP681 message payment box (unconfirmed)",
-        href: "https://github.com/status-im/status-mobile/issues/9371",
-      },
-    ],
-  },
-  {
-    wallet: "ZenGo",
-    platforms: ["iOS", "Android"],
-    supportedChains: "Ethereum, Bitcoin, Polygon, BNB Chain, and 120+ assets",
-    schemeParsing: "partial",
-    nativeTransfer: "partial",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "partial",
-    nfcTap: "no",
-    notes:
-      "Keyless MPC wallet. A documented 2021 incident confirmed ZenGo misparses ERC-681 ERC-20 transfer QRs: when Coinbase Wallet generated an ERC-681 URI for an ERC-20 send, ZenGo decoded the encoded calldata as a plain ETH transfer instead of a token transfer, risking fund loss. Native ETH payment QRs (bare ethereum:address?value=) may work, but ERC-20 and contract call params are not correctly parsed. No evidence of a fix in subsequent releases. Closed source — no repo verification possible. The incident is the primary evidence for this rating.",
-    evidence: [
-      {
-        label: "CoinDesk: Coinbase and ZenGo Spar Over QR Code Standards (ERC-681 mismatch documented)",
-        href: "https://www.coindesk.com/tech/2021/03/25/coinbase-zengo-spar-over-qr-code-standards-that-could-strand-erc-20-tokens",
-      },
-    ],
-  },
-  {
-    wallet: "SafePal",
-    platforms: ["iOS", "Android", "Hardware (S1/S1 Pro)"],
-    supportedChains: "Ethereum, Bitcoin, BNB Chain, Polygon, Solana, and 100+ blockchains",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Multi-chain software + hardware wallet. QR scanning on the hardware device is used for air-gapped signing (camera scans unsigned transaction QR from companion app), not for ERC-681 payment URIs. Software app QR is for receive addresses and WalletConnect pairing only. No documentation or third-party evidence of ethereum: URI parsing in either the app or hardware flows.",
-    evidence: [
-      {
-        label: "SafePal official site — QR feature describes air-gapped signing, not payment URI",
-        href: "https://www.safepal.com/en/",
-      },
-    ],
-  },
-  // ── Week of 2026-06-22 research: 1 new wallet ──
-  // Trezor Suite May 2026 update (released ~May 21, 2026): ERC-681 links and QR codes
-  // explicitly added to the send form. Confirmed via Trezor Forum release post, Google Play Store
-  // listing, Apple App Store listing, and GitHub trezor/trezor-suite releases page. The GitHub
-  // release note reads: "ERC-681 QR codes are now supported in the send form, making it easier
-  // to scan token transfer requests." This confirms both native and ERC-20 token support.
-  // No evidence of arbitrary contract call or @chainId auto-switching via ERC-681 URI.
-  // Existing wallets checked: no ERC-681 changes found for MetaMask Mobile (v8.52.x), Rainbow,
-  // Trust Wallet, Coinbase Wallet, imToken, D'CENT, Phantom, OKX, Rabby, Safe, Zerion, Argent,
-  // Exodus, 1inch, Uniswap, AlphaWallet, Status, ZenGo, SafePal this week.
-  {
-    wallet: "Trezor Suite",
-    platforms: ["iOS", "Android", "Desktop (Windows/macOS/Linux)"],
-    supportedChains: "Ethereum and all EVM-compatible chains supported by Trezor hardware (Base, Arbitrum, Polygon, Optimism, BSC, etc.)",
-    schemeParsing: "yes",
-    nativeTransfer: "yes",
-    erc20Transfer: "yes",
-    arbitraryContractCall: "no",
-    chainIdHandling: "partial",
-    qrScan: "yes",
-    nfcTap: "no",
-    notes:
-      "Hardware wallet companion app. Added ERC-681 link and QR code support in the May 2026 update ('ERC-681 links and QR codes are now supported in the send form'). GitHub release note confirms 'token transfer requests', implying ERC-20 support. Multiple EVM chains are supported by Trezor hardware but whether the @chainId field in an ERC-681 URI auto-selects the correct network is unconfirmed — rated partial. NFC is used for Trezor Model T and Safe 3 device communication, not payment URI tapping.",
-    evidence: [
-      {
-        label: "Trezor Forum: Trezor Suite May 2026 update (ERC-681 links and QR codes in send form)",
-        href: "https://forum.trezor.io/t/trezor-suite-may-2026-update-is-here/26798",
-      },
-      {
-        label: "trezor/trezor-suite GitHub releases (ERC-681 QR codes for token transfer requests)",
-        href: "https://github.com/trezor/trezor-suite/releases",
-      },
-      {
-        label: "Trezor Suite on Google Play — release notes (ERC-681 QR codes now supported in Send)",
-        href: "https://play.google.com/store/apps/details?id=io.trezor.suite",
-      },
-    ],
-  },
-  {
-    wallet: "Ledger Live",
-    platforms: ["iOS", "Android", "Desktop (Windows/macOS/Linux)"],
-    supportedChains: "Ethereum and all major blockchains (Bitcoin, Solana, 5500+ assets)",
-    schemeParsing: "no",
-    nativeTransfer: "no",
-    erc20Transfer: "no",
-    arbitraryContractCall: "no",
-    chainIdHandling: "no",
-    qrScan: "no",
-    nfcTap: "no",
-    notes:
-      "Hardware wallet companion app. QR for receive addresses and WalletConnect pairing only. NFC is used for Ledger device pairing (Nano X Bluetooth/NFC), not for payment URI handling. Open-source repo has no ERC-681 URI parsing.",
-    evidence: [
-      {
-        label: "Ledger Live repo search for '681' (no ERC-681 results)",
-        href: "https://github.com/LedgerHQ/ledger-live/search?q=681",
+        label: "Scanner tests",
+        href: "https://github.com/Uniswap/interface/blob/a69a38c2fab83be09b7d4113094a49b385810c5e/apps/mobile/src/components/Requests/ScanSheet/util.test.ts",
+        kind: "official-code",
       },
     ],
   },
 ];
 
+const NOT_DOCUMENTED =
+  "No explicit ERC-681 implementation claim or conformance evidence was found in the official sources reviewed. This is an open research result, not proof of incompatibility.";
 
+type ResearchQueueSeed = Pick<
+  WalletSupportRow,
+  "wallet" | "platforms" | "evidence"
+>;
+
+const WALLET_RESEARCH_SEEDS: ResearchQueueSeed[] = [
+  {
+    wallet: "Trust Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official developer docs",
+        href: "https://developer.trustwallet.com/developer/develop-for-trust/deeplinking",
+        kind: "official-docs",
+      },
+      {
+        label: "Official Wallet Core",
+        href: "https://github.com/trustwallet/wallet-core",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "Coinbase Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official mobile deeplinking docs",
+        href: "https://docs.cdp.coinbase.com/coinbase-wallet/introduction/mobile-app-deeplinking",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "imToken",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://www.token.im/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Phantom",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official deeplink docs",
+        href: "https://docs.phantom.com/phantom-deeplinks/other-methods",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "Brave Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official mobile wallet page",
+        href: "https://brave.com/wallet/",
+        kind: "official-site",
+      },
+      {
+        label: "Official mobile and desktop source",
+        href: "https://github.com/brave/brave-core",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "Backpack",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official mobile downloads",
+        href: "https://backpack.app/download",
+        kind: "official-site",
+      },
+      {
+        label: "Official EVM wallet overview",
+        href: "https://support.backpack.exchange/wallet/what-is-backpack-wallet",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "Status Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official current wallet overview",
+        href: "https://status.app/help/getting-started/what-is-status",
+        kind: "official-docs",
+      },
+      {
+        label: "Official app source",
+        href: "https://github.com/status-im/status-app",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "SafePal",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official download center",
+        href: "https://www.safepal.com/en/download/index",
+        kind: "official-site",
+      },
+      {
+        label: "Official developer docs",
+        href: "https://devdocs.safepal.com/Connect-wallet/Web/introduction.html",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "OKX Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official app-connect docs",
+        href: "https://web3.okx.com/build/docs/sdks/app-connect-overview",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "Rabby Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official source repository",
+        href: "https://github.com/RabbyHub/Rabby",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "Safe Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Archived Android feature request",
+        href: "https://github.com/safe-global/safe-android/issues/506",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "Zerion",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official iOS core repository",
+        href: "https://github.com/zeriontech/wallet-core-ios",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "Argent",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://www.argent.xyz/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Ambire Wallet",
+    platforms: ["iOS", "Android", "unlisted; support mode"],
+    evidence: [
+      {
+        label: "Official mobile availability notice",
+        href: "https://blog.ambire.com/mobile-app-under-rebuild/",
+        kind: "official-release",
+      },
+      {
+        label: "Official wallet source",
+        href: "https://github.com/AmbireTech/wallet",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "Sequence",
+    platforms: ["iOS", "Android", "embedded wallet SDK"],
+    evidence: [
+      {
+        label: "Official wallet model",
+        href: "https://support.sequence.xyz/en/article/the-sequence-wallets-v3yt0a/",
+        kind: "official-docs",
+      },
+      {
+        label: "Official wallet contracts",
+        href: "https://github.com/0xsequence/wallet-contracts",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "Exodus",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official link documentation",
+        href: "https://www.exodus.com/support/en/articles/8598656-how-do-i-use-exodus-links",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "1inch Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official developer portal",
+        href: "https://portal.1inch.dev/documentation/wallet",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "Ledger Live",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official source repository",
+        href: "https://github.com/LedgerHQ/ledger-live",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "Crypto.com Onchain",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official help center",
+        href: "https://help.crypto.com/en/collections/2221157-crypto-com-onchain",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "Binance Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet docs",
+        href: "https://developers.binance.com/docs/binance-w3w",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "MEW wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official help center",
+        href: "https://help.myetherwallet.com/en/collections/1450138-mew-wallet",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "Zengo Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official help center",
+        href: "https://help.zengo.com/en/",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "Gem Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official iOS repository",
+        href: "https://github.com/gemwalletcom/gem-ios",
+        kind: "official-code",
+      },
+    ],
+  },
+  {
+    wallet: "Coin98 Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official documentation",
+        href: "https://docs.coin98.com/",
+        kind: "official-docs",
+      },
+    ],
+  },
+  {
+    wallet: "OneKey",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://onekey.so/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Ctrl Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://ctrl.xyz/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Bitget Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://web3.bitget.com/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "imKey Pro",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://imkey.im/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Railway Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://www.railway.xyz/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "ShapeShift",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://shapeshift.com/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Burner",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://www.burner.pro/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Edge Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://edge.app/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Loopring Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://wallet.loopring.io/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Coin Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://coin.space/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Unstoppable Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://unstoppable.money/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Clave",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://www.getclave.com/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "FoxWallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://foxwallet.com/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Bridge Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://www.mtpelerin.com/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Braavos",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://braavos.app/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "PillarX",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://pillarx.app/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Ready Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://www.ready.co/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Cake Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://cakewallet.com/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "io.finnet MPC Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://www.iofinnet.com/",
+        kind: "official-site",
+      },
+    ],
+  },
+  {
+    wallet: "Tangem",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official help center",
+        href: "https://tangem.com/en/help_center/",
+        kind: "official-docs",
+      },
+    ],
+  },
+];
+
+export const WALLET_RESEARCH_QUEUE: WalletSupportRow[] =
+  WALLET_RESEARCH_SEEDS.map((row) => ({
+    ...row,
+    evidenceGrade: "no-public-evidence" as const,
+    schemeParsing: "not-documented" as const,
+    nativeTransfer: "not-documented" as const,
+    erc20Transfer: "not-documented" as const,
+    otherContractCalls: "not-documented" as const,
+    chainIdHandling: "not-documented" as const,
+    qrScan: "not-documented" as const,
+    reviewedAt: null,
+    notes: NOT_DOCUMENTED,
+  }));
+
+export const WALLET_SUPPORT = [
+  ...VERIFIED_WALLET_SUPPORT,
+  ...WALLET_RESEARCH_QUEUE,
+];

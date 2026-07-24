@@ -579,6 +579,157 @@ export const WALLET_SUPPORT: WalletSupportRow[] = [
       },
     ],
   },
+  // ── Week of 2026-06-15 research: 2 additional wallets ──
+  // MetaMask Mobile v8.52.0 (June 8, 2026): Major version bump to 8.x. Agent Wallet early access
+  // (AI-driven onchain trading), MetaMask Card spend features, MetaMask Pay cross-chain withdrawals
+  // for Polymarket. QR scanner fix (#30088) was a UI ordering fix, not ERC-681 parsing. No ERC-681 changes.
+  // New wallets added: ZenGo, SafePal.
+  //
+  // ── Week of 2026-06-08 research: 2 additional wallets ──
+  // MetaMask Mobile v7.80.0 (June 5, 2026): Perps deeplink fixes, Predict sports moneyline,
+  // MetaMetrics marketing-consent gate, engagement design updates — no ERC-681 changes. Rating unchanged.
+  // New wallets added: AlphaWallet, Status.
+  // Methodology: inspected open-source codebases (AlphaWallet/alpha-wallet-android,
+  // status-im/status-legacy) for EIP681 parsing and generation code. AlphaWallet has the
+  // most comprehensive ERC-681 implementation found to date among mobile wallets.
+  {
+    wallet: "AlphaWallet",
+    platforms: ["iOS", "Android"],
+    supportedChains: "Ethereum and all EVM-compatible chains (Polygon, BSC, Gnosis, Arbitrum, Optimism, etc.)",
+    schemeParsing: "yes",
+    nativeTransfer: "yes",
+    erc20Transfer: "yes",
+    arbitraryContractCall: "yes",
+    chainIdHandling: "yes",
+    qrScan: "yes",
+    nfcTap: "no",
+    notes:
+      "One of the most complete ERC-681 implementations found. Open-source Android codebase contains: EthereumProtocolParser (parses ethereum: URI including @chainId, function calls, and value), EIP681Type enum (ADDRESS, PAYMENT, TRANSFER, FUNCTION_CALL), and EIP681Request class that generates spec-compliant QR codes. The wallet's POS terminal mode (QR icon → POS icon) generates EIP681 payment request QR codes for native ETH and ERC-20 transfers. QR scanner routes ethereum: URIs to the correct transaction flow by type. Note: last GitHub release was v3.88 (April 2025); app is still live on stores but development pace has slowed. Built by the Smart Token Labs/TokenScript team.",
+    evidence: [
+      {
+        label: "AlphaWallet/alpha-wallet-android: EIP681Type.java (PAYMENT, TRANSFER, FUNCTION_CALL types)",
+        href: "https://github.com/AlphaWallet/alpha-wallet-android/blob/master/app/src/main/java/com/alphawallet/app/entity/EIP681Type.java",
+      },
+      {
+        label: "AlphaWallet/alpha-wallet-android: EthereumProtocolParser.java (full ethereum: URI parsing)",
+        href: "https://github.com/AlphaWallet/alpha-wallet-android/blob/master/app/src/main/java/com/alphawallet/app/entity/EthereumProtocolParser.java",
+      },
+      {
+        label: "AlphaWallet/alpha-wallet-android: EIP681Request.java (generateRequest + generateERC20Request)",
+        href: "https://github.com/AlphaWallet/alpha-wallet-android/blob/master/app/src/main/java/com/alphawallet/app/entity/EIP681Request.java",
+      },
+      {
+        label: "AlphaWallet/alpha-wallet-android issue #2082: EIP681 activity POS mode",
+        href: "https://github.com/AlphaWallet/alpha-wallet-android/issues/2082",
+      },
+    ],
+  },
+  {
+    wallet: "Status",
+    platforms: ["iOS", "Android"],
+    supportedChains: "Ethereum mainnet, Base, Arbitrum, Optimism (EVM chains)",
+    schemeParsing: "partial",
+    nativeTransfer: "partial",
+    erc20Transfer: "partial",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "partial",
+    nfcTap: "no",
+    notes:
+      "Privacy-first messenger + Ethereum wallet. The legacy codebase (status-legacy) explicitly documented partial ERC-681 QR support: 'EIP681 is supported only in QRCodes and the specification is partially supported' (issue #9183). ENS resolution for EIP681 URIs was added in PR #9240. A later issue (#9371, status-mobile) proposed full EIP681 support for message-embedded payment boxes but implementation status in the current app is unconfirmed. Rated partial/partial/partial/no/no/partial/no conservatively, reflecting the legacy codebase evidence and inability to confirm current app behaviour.",
+    evidence: [
+      {
+        label: "status-im/status-legacy#9183: EIP681 supported only in QR, spec partially supported",
+        href: "https://github.com/status-im/status-legacy/issues/9183",
+      },
+      {
+        label: "status-im/status-legacy PR#9240: ENS resolution for EIP681 URIs in QR scanner",
+        href: "https://github.com/status-im/status-legacy/pull/9240",
+      },
+      {
+        label: "status-im/status-mobile#9371: future EIP681 message payment box (unconfirmed)",
+        href: "https://github.com/status-im/status-mobile/issues/9371",
+      },
+    ],
+  },
+  {
+    wallet: "ZenGo",
+    platforms: ["iOS", "Android"],
+    supportedChains: "Ethereum, Bitcoin, Polygon, BNB Chain, and 120+ assets",
+    schemeParsing: "partial",
+    nativeTransfer: "partial",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "partial",
+    nfcTap: "no",
+    notes:
+      "Keyless MPC wallet. A documented 2021 incident confirmed ZenGo misparses ERC-681 ERC-20 transfer QRs: when Coinbase Wallet generated an ERC-681 URI for an ERC-20 send, ZenGo decoded the encoded calldata as a plain ETH transfer instead of a token transfer, risking fund loss. Native ETH payment QRs (bare ethereum:address?value=) may work, but ERC-20 and contract call params are not correctly parsed. No evidence of a fix in subsequent releases. Closed source — no repo verification possible. The incident is the primary evidence for this rating.",
+    evidence: [
+      {
+        label: "CoinDesk: Coinbase and ZenGo Spar Over QR Code Standards (ERC-681 mismatch documented)",
+        href: "https://www.coindesk.com/tech/2021/03/25/coinbase-zengo-spar-over-qr-code-standards-that-could-strand-erc-20-tokens",
+      },
+    ],
+  },
+  {
+    wallet: "SafePal",
+    platforms: ["iOS", "Android", "Hardware (S1/S1 Pro)"],
+    supportedChains: "Ethereum, Bitcoin, BNB Chain, Polygon, Solana, and 100+ blockchains",
+    schemeParsing: "no",
+    nativeTransfer: "no",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "no",
+    nfcTap: "no",
+    notes:
+      "Multi-chain software + hardware wallet. QR scanning on the hardware device is used for air-gapped signing (camera scans unsigned transaction QR from companion app), not for ERC-681 payment URIs. Software app QR is for receive addresses and WalletConnect pairing only. No documentation or third-party evidence of ethereum: URI parsing in either the app or hardware flows.",
+    evidence: [
+      {
+        label: "SafePal official site — QR feature describes air-gapped signing, not payment URI",
+        href: "https://www.safepal.com/en/",
+      },
+    ],
+  },
+  // ── Week of 2026-06-22 research: 1 new wallet ──
+  // Trezor Suite May 2026 update (released ~May 21, 2026): ERC-681 links and QR codes
+  // explicitly added to the send form. Confirmed via Trezor Forum release post, Google Play Store
+  // listing, Apple App Store listing, and GitHub trezor/trezor-suite releases page. The GitHub
+  // release note reads: "ERC-681 QR codes are now supported in the send form, making it easier
+  // to scan token transfer requests." This confirms both native and ERC-20 token support.
+  // No evidence of arbitrary contract call or @chainId auto-switching via ERC-681 URI.
+  // Existing wallets checked: no ERC-681 changes found for MetaMask Mobile (v8.52.x), Rainbow,
+  // Trust Wallet, Coinbase Wallet, imToken, D'CENT, Phantom, OKX, Rabby, Safe, Zerion, Argent,
+  // Exodus, 1inch, Uniswap, AlphaWallet, Status, ZenGo, SafePal this week.
+  {
+    wallet: "Trezor Suite",
+    platforms: ["iOS", "Android", "Desktop (Windows/macOS/Linux)"],
+    supportedChains: "Ethereum and all EVM-compatible chains supported by Trezor hardware (Base, Arbitrum, Polygon, Optimism, BSC, etc.)",
+    schemeParsing: "yes",
+    nativeTransfer: "yes",
+    erc20Transfer: "yes",
+    arbitraryContractCall: "no",
+    chainIdHandling: "partial",
+    qrScan: "yes",
+    nfcTap: "no",
+    notes:
+      "Hardware wallet companion app. Added ERC-681 link and QR code support in the May 2026 update ('ERC-681 links and QR codes are now supported in the send form'). GitHub release note confirms 'token transfer requests', implying ERC-20 support. Multiple EVM chains are supported by Trezor hardware but whether the @chainId field in an ERC-681 URI auto-selects the correct network is unconfirmed — rated partial. NFC is used for Trezor Model T and Safe 3 device communication, not payment URI tapping.",
+    evidence: [
+      {
+        label: "Trezor Forum: Trezor Suite May 2026 update (ERC-681 links and QR codes in send form)",
+        href: "https://forum.trezor.io/t/trezor-suite-may-2026-update-is-here/26798",
+      },
+      {
+        label: "trezor/trezor-suite GitHub releases (ERC-681 QR codes for token transfer requests)",
+        href: "https://github.com/trezor/trezor-suite/releases",
+      },
+      {
+        label: "Trezor Suite on Google Play — release notes (ERC-681 QR codes now supported in Send)",
+        href: "https://play.google.com/store/apps/details?id=io.trezor.suite",
+      },
+    ],
+  },
   {
     wallet: "Ledger Live",
     platforms: ["iOS", "Android", "Desktop (Windows/macOS/Linux)"],

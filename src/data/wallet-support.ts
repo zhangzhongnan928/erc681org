@@ -358,6 +358,79 @@ export const WALLET_SUPPORT: WalletSupportRow[] = [
       },
     ],
   },
+  // ── Week of 2026-03-23 research: 3 additional wallets ──
+  // Methodology: searched each wallet's GitHub repo/codebase for "681", "ethereum:",
+  // and "erc-681"; checked developer deeplink docs; confirmed wallet deeplink schemes.
+  // MetaMask Mobile confirmed at v7.68.0 (changelog: analytics refactoring only, no
+  // ERC-681 changes). No wallets found to have added or removed ERC-681 support vs prior week.
+  {
+    wallet: "Bitget Wallet",
+    platforms: ["iOS", "Android", "Desktop (Chrome extension)"],
+    supportedChains: "Ethereum and 100+ EVM chains, Bitcoin, Solana, TON, etc.",
+    schemeParsing: "no",
+    nativeTransfer: "no",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "no",
+    nfcTap: "no",
+    notes:
+      "Formerly BitKeep. Developer docs confirm proprietary `bitkeep://` deeplink scheme and WalletConnect for dApp connections. PayFi checkout flow uses `bitkeep://` protocol via their SDK. No ethereum: URI handler documented or found in public repos.",
+    evidence: [
+      {
+        label: "Bitget Wallet deeplink docs (bitkeep:// scheme only, no ethereum:)",
+        href: "https://web3.bitget.com/en/docs/reference/deeplink/",
+      },
+      {
+        label: "Bitget Wallet PayFi developer guide (bitkeep:// checkout)",
+        href: "https://web3.bitget.com/en/docs/payfi/developer-guide/",
+      },
+    ],
+  },
+  {
+    wallet: "Ambire Wallet",
+    platforms: ["iOS", "Android", "Desktop (Chrome extension)"],
+    supportedChains: "Ethereum and all EVM-compatible chains",
+    schemeParsing: "no",
+    nativeTransfer: "no",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "no",
+    nfcTap: "no",
+    notes:
+      "Smart contract wallet (ERC-4337, EIP-7702). Open-source repo shows no ERC-681 or ethereum: URI handler. Focus is on AA features (transaction batching, Gas Tank), WalletConnect, and EIP-7702 delegation. QR used for WalletConnect pairing only.",
+    evidence: [
+      {
+        label: "AmbireTech/wallet GitHub repo (no ERC-681 references)",
+        href: "https://github.com/AmbireTech/wallet",
+      },
+      {
+        label: "Ambire EIP-7702 blog post (feature focus; no ERC-681 mentioned)",
+        href: "https://blog.ambire.com/eip-7702-wallet/",
+      },
+    ],
+  },
+  {
+    wallet: "Sequence",
+    platforms: ["iOS", "Android", "Web app (embedded wallet)"],
+    supportedChains: "Ethereum and major EVM chains (Polygon, Arbitrum, Optimism, Base, etc.)",
+    schemeParsing: "no",
+    nativeTransfer: "no",
+    erc20Transfer: "no",
+    arbitraryContractCall: "no",
+    chainIdHandling: "no",
+    qrScan: "no",
+    nfcTap: "no",
+    notes:
+      "Smart contract wallet primarily used as an embedded SDK wallet for games/dApps (e.g. Skyweaver). No ERC-681 references in open-source wallet-contracts repo. Integration is SDK-based (sequence.js), not deeplink/QR URI based.",
+    evidence: [
+      {
+        label: "0xsequence/wallet-contracts GitHub repo (no ERC-681 references)",
+        href: "https://github.com/0xsequence/wallet-contracts",
+      },
+    ],
+  },
   {
     wallet: "Ledger Live",
     platforms: ["iOS", "Android", "Desktop (Windows/macOS/Linux)"],

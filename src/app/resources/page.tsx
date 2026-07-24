@@ -27,6 +27,11 @@ const resources = [
     href: "https://dev-docs.dcentwallet.com/dynamic-link/eip-681-transaction-payment-request",
     why: "Example of a wallet documenting robust EIP-681 support.",
   },
+  {
+    title: "ER681-Terminal: ERC-20 payment terminal apps + SDKs (Android / iOS)",
+    href: "https://github.com/zhangzhongnan928/ER681-Terminal",
+    why: "Open-source in-person payment terminal that presents canonical ERC-681 QR codes and settles through a constrained device-local operator wallet.",
+  },
 ];
 
 export default function ResourcesPage() {

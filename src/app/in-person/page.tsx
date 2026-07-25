@@ -95,19 +95,19 @@ export default function InPersonPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Reference implementation: ER681‑Terminal</CardTitle>
+          <CardTitle>Reference implementation: ERC681‑Terminal</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-muted-foreground">
           <p>
             <a
-              href="https://github.com/zhangzhongnan928/ER681-Terminal"
+              href="https://github.com/zhangzhongnan928/ERC681-Terminal"
               target="_blank"
               rel="noreferrer"
               className="font-medium text-foreground underline-offset-4 hover:underline"
             >
-              ER681‑Terminal
+              ERC681‑Terminal
             </a>{" "}
-            is an open-source ERC‑20 payment terminal (native Android and iOS apps plus reusable,
+            is an ERC‑20 payment terminal (native Android and iOS apps plus reusable,
             keyless read-only SDKs) built on exactly this flow: the cashier enters an amount, the
             terminal presents a canonical ERC‑681 QR code, and payment is observed via read-only
             JSON‑RPC.
@@ -151,5 +151,4 @@ export default function InPersonPage() {
     </div>
   );
 }
-
 

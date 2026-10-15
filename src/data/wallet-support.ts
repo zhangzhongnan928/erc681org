@@ -803,6 +803,17 @@ const WALLET_RESEARCH_SEEDS: ResearchQueueSeed[] = [
       },
     ],
   },
+  {
+    wallet: "BloFin Wallet",
+    platforms: ["iOS", "Android"],
+    evidence: [
+      {
+        label: "Official wallet site",
+        href: "https://wallet.blofin.com/",
+        kind: "official-docs",
+      },
+    ],
+  },
 ];
 
 export const WALLET_RESEARCH_QUEUE: WalletSupportRow[] =
